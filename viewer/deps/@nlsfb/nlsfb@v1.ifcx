@@ -1,0 +1,28 @@
+{
+  "header": {
+    "id": "nlsfb",
+    "ifcxVersion": "ifcx_alpha",
+    "dataVersion": "1.0.0",
+    "author": "NL-SfB",
+    "timestamp": "2025-06-01"
+  },
+  "imports": [],
+  "schemas": {
+    "nlsfb::class": {
+      "value": {
+        "dataType": "Object",
+        "objectRestrictions": {
+          "values": {
+            "code": {
+              "dataType": "String"
+            },
+            "uri": {
+              "dataType": "String"
+            }
+          }
+        }
+      }
+    }
+  },
+  "data": []
+}

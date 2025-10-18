@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IFC5 Creator</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <style>
+        :root {
+            --porr-blue: #143e70;
+            --porr-blue-dark: #0d2b52;
+            --porr-yellow: #ffed00;
+            --panel-bg: rgba(13, 43, 82, 0.95);
+            --panel-border: rgba(255, 237, 0, 0.32);
+            --panel-shadow: 0 32px 60px rgba(5, 26, 54, 0.55);
+            --accent: var(--porr-yellow);
+            --accent-strong: #f7d500;
+            --text: #f6f9ff;
+            --muted: #b9c8df;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Inter", "Roboto", "Helvetica", "Arial", sans-serif;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            background: radial-gradient(circle at top, rgba(20, 62, 112, 0.97) 0%, rgba(9, 34, 73, 0.98) 50%, #051a36 100%);
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        .app-shell {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            padding: 1.35rem 1.5rem;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            box-shadow: var(--panel-shadow);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand-logo {
+            width: 108px;
+            height: auto;
+            border-radius: 12px;
+            display: block;
+            box-shadow: 0 18px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .brand h1 {
+            letter-spacing: 0.05em;
+            font-size: 1.45rem;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .ghost-button,
+        .primary-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.55rem 0.9rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.92rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .ghost-button {
+            background: rgba(20, 62, 112, 0.48);
+            border-color: rgba(255, 237, 0, 0.45);
+            color: var(--accent);
+        }
+
+        .ghost-button:hover {
+            background: rgba(255, 237, 0, 0.18);
+            color: var(--porr-blue);
+        }
+
+        .primary-button {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+            color: var(--porr-blue);
+            box-shadow: 0 18px 32px rgba(255, 237, 0, 0.32);
+            border: none;
+        }
+
+        .primary-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 22px 44px rgba(255, 237, 0, 0.4);
+        }
+
+        .creator-main {
+            flex: 1 1 0;
+            display: grid;
+            grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
+            gap: 1.5rem;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            box-shadow: var(--panel-shadow);
+            padding: 1.35rem 1.5rem;
+        }
+
+        .config-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .config-panel h2 {
+            font-size: 1.1rem;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.35rem;
+        }
+
+        .config-panel h3 {
+            font-size: 0.95rem;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.35rem;
+            color: var(--accent);
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .field label {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .field input,
+        .field textarea,
+        .field select {
+            background: rgba(20, 62, 112, 0.55);
+            border: 1px solid rgba(255, 237, 0, 0.25);
+            border-radius: 10px;
+            padding: 0.55rem 0.75rem;
+            color: var(--text);
+            font-size: 0.92rem;
+        }
+
+        .field input:focus,
+        .field textarea:focus,
+        .field select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .grid-3 {
+            display: grid;
+            gap: 0.75rem;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .grid-2 {
+            display: grid;
+            gap: 0.75rem;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .property-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .property-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 0.5rem;
+        }
+
+        .property-row button {
+            border: none;
+            background: rgba(255, 237, 0, 0.2);
+            color: var(--porr-blue);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            padding: 0.45rem 0.6rem;
+        }
+
+        .property-row button:hover {
+            background: rgba(255, 237, 0, 0.35);
+        }
+
+        .preview-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-width: 0;
+        }
+
+        .viewport-shell {
+            flex: 1 1 auto;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 22px;
+            border: 1px solid rgba(20, 62, 112, 0.18);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 35px 80px rgba(20, 62, 112, 0.28);
+        }
+
+        .viewport {
+            position: absolute;
+            inset: 0;
+        }
+
+        textarea#jsonOutput {
+            width: 100%;
+            min-height: 160px;
+            resize: vertical;
+            background: rgba(20, 62, 112, 0.55);
+            border: 1px solid rgba(255, 237, 0, 0.25);
+            border-radius: 14px;
+            padding: 0.75rem;
+            color: var(--text);
+            font-size: 0.85rem;
+            overflow: auto;
+        }
+
+        .export-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .export-actions button {
+            border: none;
+        }
+
+        @media (max-width: 1100px) {
+            .creator-main {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-panel {
+                min-height: 320px;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .app-shell {
+                padding: 1rem;
+            }
+
+            .app-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .brand {
+                justify-content: space-between;
+            }
+
+            .actions {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <header class="app-header">
+            <div class="brand">
+                <img class="brand-logo" src="images/porr-logo.png" alt="PORR logo">
+                <h1>IFC5 Creator</h1>
+            </div>
+            <div class="actions">
+                <a class="ghost-button" href="index.html">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    <span>Back to Viewer</span>
+                </a>
+            </div>
+        </header>
+        <main class="creator-main">
+            <section class="config-panel panel">
+                <div class="field-group">
+                    <h2>Model Details</h2>
+                <div class="field">
+                        <label for="modelName">Model name</label>
+                        <input id="modelName" class="live-input" type="text" placeholder="My IFC Element" value="Sample Element">
+                    </div>
+                    <div class="field">
+                        <label for="modelDescription">Description (optional)</label>
+                        <textarea id="modelDescription" class="live-input" rows="3" placeholder="Describe the element and its purpose."></textarea>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <h2>Geometry</h2>
+                    <div class="field">
+                        <label for="geometryType">Type</label>
+                        <select id="geometryType" class="live-input">
+                            <option value="box">Orthogonal box</option>
+                            <option value="cylinder">Cylinder / pillar</option>
+                            <option value="sphere">Sphere / dome</option>
+                        </select>
+                    </div>
+                    <div class="grid-3">
+                        <div class="field">
+                            <label for="width">Primary size (m)</label>
+                            <input id="width" class="live-input" type="number" step="0.1" min="0.1" value="2">
+                        </div>
+                        <div class="field">
+                            <label for="depth">Secondary size (m)</label>
+                            <input id="depth" class="live-input" type="number" step="0.1" min="0.1" value="1">
+                        </div>
+                        <div class="field">
+                            <label for="height">Height (m)</label>
+                            <input id="height" class="live-input" type="number" step="0.1" min="0.1" value="2.5">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <h2>Placement</h2>
+                    <div class="grid-3">
+                        <div class="field">
+                            <label for="posX">Position X</label>
+                            <input id="posX" class="live-input" type="number" step="0.1" value="0">
+                        </div>
+                        <div class="field">
+                            <label for="posY">Position Y</label>
+                            <input id="posY" class="live-input" type="number" step="0.1" value="0">
+                        </div>
+                        <div class="field">
+                            <label for="posZ">Position Z</label>
+                            <input id="posZ" class="live-input" type="number" step="0.1" value="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <h2>Properties</h2>
+                    <div id="propertyList" class="property-list"></div>
+                    <button class="ghost-button" type="button" id="addProperty">
+                        <span class="material-symbols-outlined">add</span>
+                        <span>Add property</span>
+                    </button>
+                </div>
+            </section>
+
+            <section class="preview-panel">
+                <div class="viewport-shell">
+                    <div class="viewport" id="previewCanvas"></div>
+                </div>
+                <div class="export-actions">
+                    <button class="primary-button" type="button" id="downloadIfc">
+                        <span class="material-symbols-outlined">download</span>
+                        <span>Download IFCX</span>
+                    </button>
+                    <button class="ghost-button" type="button" id="copyJson">
+                        <span class="material-symbols-outlined">content_copy</span>
+                        <span>Copy JSON</span>
+                    </button>
+                </div>
+                <textarea id="jsonOutput" readonly spellcheck="false"></textarea>
+            </section>
+        </main>
+    </div>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.177.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.177.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        const previewContainer = document.getElementById('previewCanvas');
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        previewContainer.appendChild(renderer.domElement);
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color('#f3f6fb');
+
+        const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+        camera.position.set(4, 3, 4);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+
+        const ambient = new THREE.AmbientLight(0xfefefe, 0.8);
+        scene.add(ambient);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight.position.set(5, 7, 6);
+        scene.add(dirLight);
+
+        const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(12, 12),
+            new THREE.MeshStandardMaterial({ color: 0xe0e7ef, roughness: 1, metalness: 0 })
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.001;
+        scene.add(ground);
+
+        const grid = new THREE.GridHelper(12, 24, 0x9dbad9, 0xc2d4ec);
+        scene.add(grid);
+
+        let previewMesh = null;
+
+        function resizeRenderer() {
+            const { clientWidth, clientHeight } = previewContainer;
+            renderer.setSize(clientWidth, clientHeight);
+            camera.aspect = clientWidth / clientHeight;
+            camera.updateProjectionMatrix();
+        }
+
+        window.addEventListener('resize', resizeRenderer);
+        resizeRenderer();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        function randomId(prefix = 'obj') {
+            if (window.crypto && crypto.randomUUID) {
+                return `${prefix}-${crypto.randomUUID()}`;
+            }
+            return `${prefix}-${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
+        }
+
+        function parseValue(val) {
+            if (val === '') return '';
+            const num = Number(val);
+            return Number.isFinite(num) ? num : val;
+        }
+
+        function collectFormValues() {
+            return {
+                name: document.getElementById('modelName').value.trim() || 'Generated Element',
+                description: document.getElementById('modelDescription').value.trim(),
+                geometryType: document.getElementById('geometryType').value,
+                width: Math.max(0.1, Number(document.getElementById('width').value) || 1),
+                depth: Math.max(0.1, Number(document.getElementById('depth').value) || 1),
+                height: Math.max(0.1, Number(document.getElementById('height').value) || 1),
+                positionX: Number(document.getElementById('posX').value) || 0,
+                positionY: Number(document.getElementById('posY').value) || 0,
+                positionZ: Number(document.getElementById('posZ').value) || 0,
+                properties: collectProperties()
+            };
+        }
+
+        function collectProperties() {
+            const rows = document.querySelectorAll('.property-row');
+            const props = {};
+            rows.forEach(row => {
+                const key = row.querySelector('.prop-key').value.trim();
+                const valInput = row.querySelector('.prop-value');
+                if (!key) return;
+                const raw = parseValue(valInput.value.trim());
+                props[key] = raw === undefined || raw === null ? "" : String(raw);
+            });
+            return props;
+        }
+
+        function addPropertyRow(key = '', value = '') {
+            const propertyList = document.getElementById('propertyList');
+            const row = document.createElement('div');
+            row.className = 'property-row';
+            row.innerHTML = `
+                <input class="prop-key" type="text" placeholder="Property name" value="${key}">
+                <input class="prop-value" type="text" placeholder="Value" value="${value}">
+                <button type="button" title="Remove property">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            `;
+            row.querySelectorAll('input').forEach(inp => {
+                inp.addEventListener('input', () => {
+                    updatePreview();
+                    updateOutput();
+                });
+            });
+            row.querySelector('button').addEventListener('click', () => {
+                row.remove();
+                updateOutput();
+            });
+            propertyList.appendChild(row);
+        }
+
+        document.getElementById('addProperty').addEventListener('click', () => {
+            addPropertyRow();
+        });
+
+        function buildThreeGeometry(values) {
+            let geometry;
+            switch (values.geometryType) {
+                case 'cylinder': {
+                    geometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 48, 1, false);
+                    geometry.scale(values.width, values.height, values.depth);
+                    break;
+                }
+                case 'sphere': {
+                    geometry = new THREE.SphereGeometry(0.5, 48, 32);
+                    geometry.scale(values.width, values.height, values.depth);
+                    break;
+                }
+                case 'box':
+                default: {
+                    geometry = new THREE.BoxGeometry(1, 1, 1);
+                    geometry.scale(values.width, values.height, values.depth);
+                    break;
+                }
+            }
+            geometry.computeVertexNormals();
+            return geometry;
+        }
+
+        function updatePreview() {
+            const values = collectFormValues();
+            const geometry = buildThreeGeometry(values);
+            if (previewMesh) {
+                scene.remove(previewMesh);
+                previewMesh.geometry.dispose();
+                previewMesh.material.dispose();
+            }
+            const material = new THREE.MeshStandardMaterial({
+                color: 0x4f9fd9,
+                metalness: 0.25,
+                roughness: 0.65
+            });
+            previewMesh = new THREE.Mesh(geometry, material);
+            previewMesh.position.set(values.positionX, values.positionY, values.positionZ);
+            scene.add(previewMesh);
+        }
+
+        const liveInputs = document.querySelectorAll('.live-input');
+        liveInputs.forEach(input => {
+            input.addEventListener('input', () => {
+                updatePreview();
+                updateOutput();
+            });
+        });
+
+        function buildIfcFile() {
+            const values = collectFormValues();
+            const geometry = buildThreeGeometry(values);
+
+            const positionAttribute = geometry.getAttribute('position');
+            const indexAttribute = geometry.index;
+
+            const points = [];
+            for (let i = 0; i < positionAttribute.count; i++) {
+                points.push([
+                    Number(positionAttribute.getX(i).toFixed(6)),
+                    Number(positionAttribute.getY(i).toFixed(6)),
+                    Number(positionAttribute.getZ(i).toFixed(6))
+                ]);
+            }
+
+            const indices = Array.from(indexAttribute.array);
+
+            const rootId = randomId('ifc-element');
+            const geomId = `${rootId}/geometry`;
+
+            const transform = [
+                [1, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [values.positionX, values.positionY, values.positionZ, 1]
+            ];
+
+            const attributes = {
+                "usd::usdgeom::mesh::points": points,
+                "usd::usdgeom::mesh::faceVertexIndices": indices,
+                "usd::xformop::transform": transform,
+                "custom::dimensions": {
+                    width: values.width,
+                    depth: values.depth,
+                    height: values.height,
+                    geometryType: values.geometryType
+                }
+            };
+
+            if (Object.keys(values.properties).length) {
+                attributes["custom::properties"] = values.properties;
+            }
+
+            const headerId = `generated/${values.name.replace(/\\s+/g, '-').toLowerCase() || 'element'}@${Date.now()}`;
+
+            return {
+                header: {
+                    id: headerId,
+                    version: "ifcx_alpha",
+                    author: "IFC5 Creator",
+                    timestamp: new Date().toISOString(),
+                    description: values.description ? [values.description] : ["Generated with IFC5 Creator"]
+                },
+                imports: [
+                    { uri: "https://ifcx.dev/@openusd.org/usd@v1.ifcx" },
+                    { uri: "https://ifcx.dev/@standards.buildingsmart.org/ifc/core/ifc@v5a.ifcx" },
+                    { uri: "https://ifcx.dev/@standards.buildingsmart.org/ifc/core/prop@v5a.ifcx" },
+                    { uri: "https://ifcx.dev/@standards.buildingsmart.org/ifc/ifc-mat/ifc-mat@v1.0.0.ifcx" },
+                    { uri: "https://ifcx.dev/@standards.buildingsmart.org/ifc/ifc-mat/prop@v1.0.0.ifcx" }
+                ],
+                schemas: {
+                    "usd::usdgeom::mesh::points": {
+                        value: {
+                            dataType: "Array",
+                            arrayRestrictions: {
+                                value: {
+                                    dataType: "Array",
+                                    arrayRestrictions: {
+                                        value: { dataType: "Real" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "usd::usdgeom::mesh::faceVertexIndices": {
+                        value: {
+                            dataType: "Array",
+                            arrayRestrictions: {
+                                value: { dataType: "Integer" }
+                            }
+                        }
+                    },
+                    "usd::xformop::transform": {
+                        value: {
+                            dataType: "Array",
+                            arrayRestrictions: {
+                                value: {
+                                    dataType: "Array",
+                                    arrayRestrictions: {
+                                        value: { dataType: "Real" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "custom::dimensions": {
+                        value: {
+                            dataType: "Object",
+                            objectRestrictions: {
+                                values: {
+                                    width: { dataType: "Real" },
+                                    depth: { dataType: "Real" },
+                                    height: { dataType: "Real" },
+                                    geometryType: { dataType: "String" }
+                                }
+                            }
+                        }
+                    },
+                    "custom::properties": {
+                        value: {
+                            dataType: "Object",
+                            objectRestrictions: {
+                                additionalProperties: { dataType: "String" }
+                            }
+                        }
+                    }
+                },
+                data: [
+                    {
+                        path: rootId,
+                        children: {
+                            [values.name]: geomId
+                        }
+                    },
+                    {
+                        path: geomId,
+                        attributes
+                    }
+                ]
+            };
+        }
+
+        function updateOutput() {
+            const jsonOutput = document.getElementById('jsonOutput');
+            const file = buildIfcFile();
+            jsonOutput.value = JSON.stringify(file, null, 2);
+        }
+
+        const downloadButton = document.getElementById('downloadIfc');
+        const copyButton = document.getElementById('copyJson');
+        const copyLabel = copyButton.querySelector('span:last-child');
+
+        downloadButton.addEventListener('click', () => {
+            const file = buildIfcFile();
+            const blob = new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${file.header.id.replace(/[\\/:*?"<>|]/g, '_')}.ifcx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        copyButton.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(document.getElementById('jsonOutput').value);
+                copyLabel.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyLabel.textContent = 'Copy JSON';
+                }, 1500);
+            } catch (err) {
+                console.warn('Clipboard copy failed', err);
+            }
+        });
+
+        // Initialize UI
+        addPropertyRow("IfcName", "GeneratedElement");
+        updatePreview();
+        updateOutput();
+    </script>
+</body>
+</html>
