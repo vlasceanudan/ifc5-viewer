@@ -1,0 +1,14 @@
+{
+  "header": {
+    "id": "local/offline/ifc/ifc-mat/prop@v1.0.0.ifcx",
+    "version": "ifcx_alpha",
+    "author": "offline-fallback",
+    "timestamp": "2025-10-18T20:22:25Z",
+    "description": [
+      "Local fallback for missing prop@v1.0.0.ifcx from ifcx.dev"
+    ]
+  },
+  "imports": [],
+  "schemas": [],
+  "data": []
+}

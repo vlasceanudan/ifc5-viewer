@@ -1,0 +1,23 @@
+{
+  "name": "ifcx-schema",
+  "version": "0.1.0",
+  "type": "module",
+  "peerDependencies": {
+    "@typespec/compiler": "latest",
+    "@typespec/openapi3": "latest"
+  },
+  "devDependencies": {
+    "@typespec/compiler": "latest",
+    "@typespec/openapi3": "latest",
+    "json-schema-to-typescript": "^15.0.3",
+    "openapi-typescript": "^7.6.1"
+  },
+  "scripts": {
+    "compile": "tsp compile ifcx.tsp",
+    "gen": "npx openapi-typescript ./out/@typespec/openapi3/openapi.yaml -o ./out/ts/ifcx.d.ts"
+  },
+  "private": true,
+  "dependencies": {
+    "@typespec/json-schema": "^0.63.0"
+  }
+}
