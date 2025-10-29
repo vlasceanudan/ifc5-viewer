@@ -271,8 +271,13 @@ function AddDataFromPreComposition(input, node, nodes) {
   });
   Object.entries(input.children).forEach(([childName, child]) => {
     if (child !== null) {
-      let classNode = ComposeNodeFromPath(GetHead(child), nodes);
-      let subnode = GetChildNodeWithPath(classNode, GetTail(child));
+      let subnode;
+      if (GetHead(child) === input.path) {
+        subnode = ComposeNodeFromPath(child, nodes);
+      } else {
+        let classNode = ComposeNodeFromPath(GetHead(child), nodes);
+        subnode = GetChildNodeWithPath(classNode, GetTail(child));
+      }
       if (!subnode) throw new Error(`Unknown node ${child}`);
       node.children.set(childName, subnode);
     } else {
