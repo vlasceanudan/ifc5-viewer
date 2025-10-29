@@ -271,13 +271,8 @@ function AddDataFromPreComposition(input, node, nodes) {
   });
   Object.entries(input.children).forEach(([childName, child]) => {
     if (child !== null) {
-      let subnode;
-      if (GetHead(child) === input.path) {
-        subnode = ComposeNodeFromPath(child, nodes);
-      } else {
-        let classNode = ComposeNodeFromPath(GetHead(child), nodes);
-        subnode = GetChildNodeWithPath(classNode, GetTail(child));
-      }
+      let classNode = ComposeNodeFromPath(GetHead(child), nodes);
+      let subnode = GetChildNodeWithPath(classNode, GetTail(child));
       if (!subnode) throw new Error(`Unknown node ${child}`);
       node.children.set(childName, subnode);
     } else {
@@ -358,7 +353,7 @@ function ValidateAttributeValue(desc, value, path, schemas) {
           if (Object.hasOwn(valueRestrictions, key)) return;
           ValidateAttributeValue(additional, value[key], path + "." + key, schemas);
         });
-      } else {
+      } else if (additional === false) {
         Object.keys(value).forEach((key) => {
           if (Object.hasOwn(valueRestrictions, key)) return;
           throw new SchemaValidationError(`Unexpected key "${key}" in object at ${path}`);
@@ -1222,12 +1217,7 @@ async function composeAndRender() {
   }
   let tree = null;
   let dataArray = datas.map((arr) => arr[1]);
-  try {
-    tree = await compose3(dataArray);
-  } catch (e) {
-    console.error("compose3 failed", e);
-    throw e;
-  }
+  tree = await compose3(dataArray);
   if (!tree) {
     console.error("No result from composition");
     return;
