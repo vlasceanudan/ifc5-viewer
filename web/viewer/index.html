@@ -678,6 +678,10 @@
                 <h1>IFC5 Viewer</h1>
             </div>
             <div class="actions">
+                <a class="ghost-button" href="workflow.html">
+                    <span class="material-symbols-outlined">analytics</span>
+                    <span>Workflow</span>
+                </a>
                 <a class="ghost-button create-link" href="create.html">
                     <span class="material-symbols-outlined">add_circle</span>
                     <span>Create Model</span>
@@ -742,7 +746,7 @@
     }
     </script>
     <script type="module">
-        import addModel, { clearModels } from './render.mjs';
+        import addModel, { clearModels } from './render.mjs?v=20251027d';
 
         document.querySelector('#fileForm').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -760,8 +764,10 @@
                     }
                     if (json) {
                         addModel(file.name, json).catch(e => {
-                            document.querySelector('.error-modal .message').innerHTML = e.message;
+                            const msg = e && e.stack ? `${e.message}<br><pre style="white-space:pre-wrap;text-align:left">${e.stack}</pre>` : (e && e.message ? e.message : String(e));
+                            document.querySelector('.error-modal .message').innerHTML = msg;
                             document.querySelector('.error-modal').style.display = 'flex';
+                            console.error('addModel failed', e);
                         });
                     }
                 };

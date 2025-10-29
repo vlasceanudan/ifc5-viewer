@@ -315,8 +315,12 @@
             </div>
             <div class="actions">
                 <a class="ghost-button" href="index.html">
-                    <span class="material-symbols-outlined">arrow_back</span>
-                    <span>Back to Viewer</span>
+                    <span class="material-symbols-outlined">travel_explore</span>
+                    <span>Viewer</span>
+                </a>
+                <a class="ghost-button" href="workflow.html">
+                    <span class="material-symbols-outlined">analytics</span>
+                    <span>Workflow</span>
                 </a>
             </div>
         </header>
@@ -417,6 +421,7 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        console.info('IFC5 Creator preview build v20251027-1');
 
         const previewContainer = document.getElementById('previewCanvas');
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -577,7 +582,8 @@
                 roughness: 0.65
             });
             previewMesh = new THREE.Mesh(geometry, material);
-            previewMesh.position.set(values.positionX, values.positionY, values.positionZ);
+            // Map IFC-style Z-up translation into three.js Y-up preview
+            previewMesh.position.set(values.positionX, values.positionZ, values.positionY);
             scene.add(previewMesh);
         }
 
@@ -618,9 +624,13 @@
             ];
 
             const attributes = {
-                "usd::usdgeom::mesh::points": points,
-                "usd::usdgeom::mesh::faceVertexIndices": indices,
-                "usd::xformop::transform": transform,
+                "usd::usdgeom::mesh": {
+                    points,
+                    faceVertexIndices: indices
+                },
+                "usd::xformop": {
+                    transform
+                },
                 "custom::dimensions": {
                     width: values.width,
                     depth: values.depth,
@@ -651,35 +661,47 @@
                     { uri: "https://ifcx.dev/@standards.buildingsmart.org/ifc/ifc-mat/prop@v1.0.0.ifcx" }
                 ],
                 schemas: {
-                    "usd::usdgeom::mesh::points": {
+                    "usd::usdgeom::mesh": {
                         value: {
-                            dataType: "Array",
-                            arrayRestrictions: {
-                                value: {
-                                    dataType: "Array",
-                                    arrayRestrictions: {
-                                        value: { dataType: "Real" }
+                            dataType: "Object",
+                            objectRestrictions: {
+                                values: {
+                                    points: {
+                                        dataType: "Array",
+                                        arrayRestrictions: {
+                                            value: {
+                                                dataType: "Array",
+                                                arrayRestrictions: {
+                                                    value: { dataType: "Real" }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    faceVertexIndices: {
+                                        dataType: "Array",
+                                        arrayRestrictions: {
+                                            value: { dataType: "Integer" }
+                                        }
                                     }
                                 }
                             }
                         }
                     },
-                    "usd::usdgeom::mesh::faceVertexIndices": {
+                    "usd::xformop": {
                         value: {
-                            dataType: "Array",
-                            arrayRestrictions: {
-                                value: { dataType: "Integer" }
-                            }
-                        }
-                    },
-                    "usd::xformop::transform": {
-                        value: {
-                            dataType: "Array",
-                            arrayRestrictions: {
-                                value: {
-                                    dataType: "Array",
-                                    arrayRestrictions: {
-                                        value: { dataType: "Real" }
+                            dataType: "Object",
+                            objectRestrictions: {
+                                values: {
+                                    transform: {
+                                        dataType: "Array",
+                                        arrayRestrictions: {
+                                            value: {
+                                                dataType: "Array",
+                                                arrayRestrictions: {
+                                                    value: { dataType: "Real" }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }

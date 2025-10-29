@@ -1,0 +1,1607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tunnel Progress</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <style>
+        :root {
+            --bg: linear-gradient(135deg, #0b1f3d 0%, #061229 55%, #071a34 100%);
+            --panel: rgba(15, 45, 85, 0.95);
+            --panel-raised: rgba(17, 52, 96, 0.9);
+            --subpanel: rgba(12, 36, 70, 0.9);
+            --border: rgba(255, 237, 0, 0.25);
+            --border-soft: rgba(255, 237, 0, 0.12);
+            --accent: #ffed00;
+            --accent-strong: #ffd84d;
+            --accent-dark: #123a70;
+            --text: #f5f8ff;
+            --muted: rgba(198, 210, 231, 0.78);
+            --input-bg: rgba(8, 24, 46, 0.96);
+            --surface-dark: rgba(7, 22, 44, 0.92);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Inter", "Roboto", "Helvetica", "Arial", sans-serif;
+        }
+
+        html, body {
+            min-height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            overflow-y: auto;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .shell {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+            padding: 1.4rem 1.6rem 1.8rem;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.2rem 1.6rem;
+            box-shadow: 0 24px 40px rgba(3, 10, 24, 0.55);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand img {
+            height: 50px;
+            border-radius: 12px;
+            box-shadow: 0 18px 36px rgba(0, 0, 0, 0.35);
+        }
+
+        .brand h1 {
+            font-size: 1.5rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .ghost-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.55rem 1.1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 237, 0, 0.32);
+            background: rgba(25, 58, 108, 0.65);
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 0.92rem;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+
+        .ghost-button:hover {
+            background: rgba(255, 237, 0, 0.18);
+            color: var(--accent-dark);
+            transform: translateY(-1px);
+        }
+
+        .nav-actions .ghost-button span.material-symbols-outlined {
+            font-size: 1.1rem;
+        }
+
+        main.page-grid {
+            flex: 1 1 auto;
+            display: grid;
+            grid-template-columns: minmax(340px, 380px) minmax(0, 1fr);
+            gap: 1.5rem;
+            min-height: 0;
+        }
+
+        .side-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+            min-height: 0;
+        }
+
+        .card {
+            background: var(--panel-raised);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.3rem 1.4rem;
+            box-shadow: 0 26px 48px rgba(3, 10, 24, 0.55);
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+            min-height: 0;
+        }
+
+        .progress-card header h2,
+        .form-card header h2,
+        .segments-card header h2,
+        .viewer-header h2 {
+            font-size: 1.1rem;
+            letter-spacing: 0.05em;
+        }
+
+        .progress-card header p,
+        .form-card header p,
+        .viewer-header p {
+            font-size: 0.82rem;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.85rem;
+        }
+
+        .stat-card {
+            background: rgba(12, 33, 62, 0.92);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
+            padding: 0.85rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .stat-card h3 {
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .stat-card span {
+            font-size: 1.65rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stage-overview {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+
+        .stage-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.9rem;
+            padding: 0.55rem 0.75rem;
+            border-radius: 12px;
+            background: rgba(10, 30, 56, 0.92);
+            border: 1px solid var(--border-soft);
+        }
+
+        .stage-info {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            font-weight: 600;
+        }
+
+        .stage-stats {
+            display: flex;
+            gap: 0.8rem;
+            font-size: 0.78rem;
+            color: var(--muted);
+        }
+
+        .swatch {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .form-card form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.05rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .form-grid .full-span {
+            grid-column: 1 / -1;
+        }
+
+        label.field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        label.field span {
+            letter-spacing: 0.04em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.65rem 0.8rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-soft);
+            background: var(--input-bg);
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        input::placeholder {
+            color: rgba(210, 224, 245, 0.6);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(255, 237, 0, 0.2);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .primary-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.65rem 1.1rem;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+            color: var(--accent-dark);
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.95rem;
+            box-shadow: 0 20px 40px rgba(255, 237, 0, 0.28);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .primary-button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 24px 48px rgba(255, 237, 0, 0.38);
+        }
+
+        .primary-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .segments-card header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .segments-card header span {
+            font-size: 0.78rem;
+            color: var(--muted);
+        }
+
+        .segments-table-wrapper {
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
+            background: var(--surface-dark);
+            max-height: 360px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .segments-table-scroll {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        thead {
+            background: rgba(255, 237, 0, 0.12);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-size: 0.7rem;
+            color: var(--accent);
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 237, 0, 0.12);
+            z-index: 1;
+        }
+
+        th, td {
+            padding: 0.65rem 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: left;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 237, 0, 0.08);
+        }
+
+        td.actions-cell {
+            width: 64px;
+            text-align: center;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text);
+            background: rgba(255, 237, 0, 0.16);
+            border: 1px solid rgba(255, 237, 0, 0.3);
+        }
+
+        .tag {
+            margin-left: 0.45rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 999px;
+            background: rgba(255, 237, 0, 0.16);
+            color: var(--accent);
+            font-size: 0.65rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .action-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 237, 0, 0.3);
+            background: rgba(20, 54, 104, 0.75);
+            color: var(--accent);
+            cursor: pointer;
+            transition: transform 0.18s ease, background 0.18s ease;
+        }
+
+        .action-button:hover {
+            background: rgba(255, 237, 0, 0.22);
+            color: var(--accent-dark);
+            transform: translateY(-1px);
+        }
+
+        .action-button .material-symbols-outlined {
+            font-size: 1.05rem;
+        }
+
+        .viewer-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.3rem;
+            min-height: 520px;
+        }
+
+        .viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .viewer-header span {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .viewer-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: minmax(240px, 260px) minmax(0, 1fr) minmax(220px, 260px);
+            gap: 1.2rem;
+            min-height: 0;
+        }
+
+        .viewer-subcard {
+            background: var(--subpanel);
+            border: 1px solid var(--border-soft);
+            border-radius: 18px;
+            padding: 1rem 1.1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            min-height: 0;
+        }
+
+        .viewer-subcard .subcard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .viewer-subcard .subcard-header h3 {
+            font-size: 0.95rem;
+            letter-spacing: 0.04em;
+        }
+
+        .viewer-subcard .subcard-header p {
+            font-size: 0.75rem;
+            color: var(--muted);
+            line-height: 1.35;
+        }
+
+        .subcard-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .viewer-subcard .subcard-body {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+        }
+
+        #clearLayers,
+        #exportTunnel {
+            padding: 0.45rem 0.85rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 237, 0, 0.4);
+            background: linear-gradient(135deg, rgba(255, 237, 0, 0.22), rgba(255, 237, 0, 0.05));
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        #clearLayers:hover:not(:disabled),
+        #exportTunnel:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 36px rgba(255, 237, 0, 0.25);
+        }
+
+        #clearLayers:disabled,
+        #exportTunnel:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .layer-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+        }
+
+        .viewport-area,
+        .viewer-canvas {
+            position: relative;
+            background: var(--surface-dark);
+            border: 1px solid var(--border-soft);
+            border-radius: 18px;
+            padding: 0.6rem;
+            min-height: 0;
+            display: flex;
+        }
+
+        .viewport {
+            position: relative;
+            flex: 1;
+            border-radius: 14px;
+            overflow: hidden;
+            min-height: 380px;
+        }
+
+        .viewport canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .error-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 10, 22, 0.72);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 40;
+        }
+
+        .error-modal .message {
+            background: rgba(13, 43, 82, 0.98);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 1.2rem 1.6rem;
+            max-width: min(640px, 90vw);
+            white-space: pre-wrap;
+            font-size: 0.92rem;
+        }
+
+        .hidden-tree {
+            display: none !important;
+        }
+
+        @media (max-width: 1280px) {
+            main.page-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .side-column {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .side-column > .card {
+                flex: 1 1 320px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .viewer-grid {
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-rows: auto minmax(320px, 1fr) auto;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .shell {
+                padding: 1.1rem;
+            }
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <header class="topbar">
+            <div class="brand">
+                <img src="images/porr-logo.png" alt="PORR logo">
+                <h1>Tunnel Progress</h1>
+            </div>
+            <div class="nav-actions">
+                <a class="ghost-button" href="index.html">
+                    <span class="material-symbols-outlined">stadia_controller</span>
+                    <span>Viewer</span>
+                </a>
+                <a class="ghost-button" href="create.html">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    <span>Create Model</span>
+                </a>
+            </div>
+        </header>
+        <main class="page-grid">
+            <aside class="side-column">
+                <section class="card progress-card">
+                    <header>
+                        <h2>Progress overview</h2>
+                        <p>Metrics combine the reference tunnel slices with segments you add.</p>
+                    </header>
+                    <div class="metrics-grid">
+                        <div class="stat-card">
+                            <h3>Total volume (mÃƒâ€šÃ‚Â³)</h3>
+                            <span id="metricVolume">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total chain length (m)</h3>
+                            <span id="metricLength">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Segments logged</h3>
+                            <span id="metricCount">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Last excavation date</h3>
+                            <span id="metricLast">-</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="font-size:0.86rem; letter-spacing:0.05em; margin-bottom:0.5rem;">Stage breakdown</h3>
+                        <div class="stage-overview" id="stageBreakdown"></div>
+                    </div>
+                </section>
+                <section class="card form-card">
+                    <header>
+                        <h2>Create tunnel segment</h2>
+                        <p>Choose the part of the tunnel, enter chainage in kilometres, and capture when the excavation happened.</p>
+                    </header>
+                    <form id="customSegmentForm">
+                        <div class="form-grid">
+                            <label class="field full-span" for="segmentStage">
+                                <span>Part of tunnel</span>
+                                <select id="segmentStage" required>
+                                    <option value="topHeading">Top Heading</option>
+                                    <option value="bench">Bench</option>
+                                    <option value="invert">Invert</option>
+                                </select>
+                            </label>
+                            <label class="field full-span" for="segmentSection">
+                                <span>Section name</span>
+                                <input id="segmentSection" type="text" value="North Tunnel" placeholder="North Tunnel" autocomplete="off">
+                            </label>
+                            <label class="field" for="segmentStart">
+                                <span>Start chainage (m)</span>
+                                <input id="segmentStart" type="number" min="0" step="0.01" placeholder="e.g. 0.00" required>
+                            </label>
+                            <label class="field" for="segmentEnd">
+                                <span>End chainage (m)</span>
+                                <input id="segmentEnd" type="number" min="0" step="0.01" placeholder="e.g. 0.50" required>
+                            </label>
+                            <label class="field full-span" for="segmentDate">
+                                <span>Excavation date</span>
+                                <input id="segmentDate" type="date">
+                            </label>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="primary-button" id="createSubmit">
+                                <span class="material-symbols-outlined">add</span>
+                                <span>Add segment</span>
+                            </button>
+                        </div>
+                    </form>
+                </section>
+                <section class="card segments-card">
+                    <header>
+                        <h2>Excavation segments</h2>
+                        <span id="tableCount">0 items</span>
+                    </header>
+                    <div class="segments-table-wrapper">
+                        <div class="segments-table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Stage</th>
+                                        <th>Chainage (m)</th>
+                                        <th>Length (m)</th>
+                                        <th>Volume (mA,A3)</th>
+                                        <th>Date</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="segmentsTable">
+                                    <tr class="empty"><td colspan="6">No segments loaded yet.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+            <section class="card viewer-section">
+                <div class="viewer-header">
+                    <div>
+                        <h2>Progress viewer</h2>
+                        <p>Chainage runs along X. The IFC stack below matches the main viewer behaviour.</p>
+                    </div>
+                    <span id="loadStatus">Initializing...</span>
+                </div>
+                <div class="viewer-grid">
+                    <section class="viewer-subcard layers-panel">
+                        <div class="subcard-header">
+                            <h3>Layers</h3>
+                            <div class="subcard-actions">
+                                <button type="button" id="exportTunnel">Export IFCX</button>
+                                <button type="button" id="clearLayers">Reset to examples</button>
+                            </div>
+                        </div>
+                        <div class="subcard-body layer-list" aria-live="polite"></div>
+                    </section>
+                    <section class="viewer-canvas">
+                        <div class="viewport" role="presentation" aria-label="Tunnel progress viewport"></div>
+                    </section>
+                    <section class="viewer-subcard attributes-panel">
+                        <div class="subcard-header">
+                            <div>
+                                <h3>Selection</h3>
+                                <p>Click geometry or layer entries to inspect IFC attributes.</p>
+                            </div>
+                        </div>
+                        <div class="subcard-body table"></div>
+                    </section>
+                </div>
+                <div class="tree hidden-tree"></div>
+            </section>
+        </main>
+        <div class="error-modal">
+            <span class="message"></span>
+        </div>
+    </div>
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.177.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.177.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module">
+        import addModel, { clearModels } from './render.mjs?v=20251027d';
+
+        const DEFAULT_IMPORTS = [
+            { uri: "https://ifcx.dev/@standards.buildingsmart.org/ifc/core/ifc@v5a.ifcx" },
+            { uri: "https://ifcx.dev/@standards.buildingsmart.org/ifc/core/prop@v5a.ifcx" },
+            { uri: "https://ifcx.dev/@standards.buildingsmart.org/ifc/ifc-infra/infra@v1.0.0.ifcx" },
+            { uri: "https://ifcx.dev/@openusd.org/usd@v1.ifcx" }
+        ];
+
+        const STAGE_LIBRARY = (() => {
+            return {
+                topHeading: buildStageTemplate({
+                    key: 'topHeading',
+                    label: 'Top Heading',
+                    colorHex: '#1957a2',
+                    lateralOffset: 0,
+                    startOffset: 0,
+                    anchorMin: -0.5,
+                    volumePerMeter: 4.06396,
+                    baseLength: 1,
+                    stageRootPath: '5a26bd1d-fa44-4aaa-9a5e-91a06eed2e52',
+                    baseEntityPath: '13168941-10d9-4c6a-8c63-505cc302312c',
+                    childPrefix: 'IfcEarthworksCut',
+                    baseExampleFile: '01_TopHeading 0-1.ifcx'
+                }),
+                bench: buildStageTemplate({
+                    key: 'bench',
+                    label: 'Bench',
+                    colorHex: '#a35cf0',
+                    lateralOffset: 0,
+                    startOffset: 0,
+                    anchorMin: -0.5,
+                    volumePerMeter: 12.575,
+                    baseLength: 4,
+                    stageRootPath: '8033e166-acde-426e-aab9-482e0453bfcb',
+                    baseEntityPath: '4dc29954-3d93-4309-9355-3a73534a9167',
+                    childPrefix: 'IfcEarthworksCut',
+                    baseExampleFile: '06_Bench.ifcx'
+                }),
+                invert: buildStageTemplate({
+                    key: 'invert',
+                    label: 'Invert',
+                    colorHex: '#f5a23d',
+                    lateralOffset: 0,
+                    startOffset: 0,
+                    anchorMin: -0.5,
+                    volumePerMeter: 9.855181,
+                    baseLength: 4,
+                    stageRootPath: '44af358b-3160-4063-8a89-a868335ff2nd',
+                    baseEntityPath: '9a4bbf36-3373-4765-9322-cbba88d91d4b',
+                    childPrefix: 'IfcEarthworksCut',
+                    baseExampleFile: '07_Invert.ifcx'
+                })
+            };
+        })();
+
+        const STAGE_ORDER = {
+            topHeading: 0,
+            bench: 1,
+            invert: 2
+        };
+
+        const SEGMENT_FILES = [
+            { file: '01_TopHeading 0-1.ifcx', stage: 'topHeading' },
+            { file: '02_TopHeading 1-2.ifcx', stage: 'topHeading' },
+            { file: '03_TopHeading 2-3.ifcx', stage: 'topHeading' },
+            { file: '04_TopHeading 3-4.ifcx', stage: 'topHeading' },
+            { file: '05_TopHeading 4-5.ifcx', stage: 'topHeading' },
+            { file: '06_Bench.ifcx', stage: 'bench' },
+            { file: '07_Invert.ifcx', stage: 'invert' },
+            { file: '08_TopHeading 5-6.ifcx', stage: 'topHeading' },
+            { file: '09_TopHeading 6-7.ifcx', stage: 'topHeading' },
+            { file: '10_TopHeading 7-8.ifcx', stage: 'topHeading' }
+        ];
+
+        const segments = [];
+        let isBusy = false;
+
+        const stageBreakdownEl = document.getElementById('stageBreakdown');
+        const tableBody = document.getElementById('segmentsTable');
+        const tableCountEl = document.getElementById('tableCount');
+        const metricVolumeEl = document.getElementById('metricVolume');
+        const metricLengthEl = document.getElementById('metricLength');
+        const metricCountEl = document.getElementById('metricCount');
+        const metricLastEl = document.getElementById('metricLast');
+        const loadStatusEl = document.getElementById('loadStatus');
+        const exportButton = document.getElementById('exportTunnel');
+        const reloadButton = document.getElementById('clearLayers');
+        const form = document.getElementById('customSegmentForm');
+        const formStageSelect = document.getElementById('segmentStage');
+        const formSectionInput = document.getElementById('segmentSection');
+        const formStartInput = document.getElementById('segmentStart');
+        const formEndInput = document.getElementById('segmentEnd');
+        const formDateInput = document.getElementById('segmentDate');
+        const formSubmitButton = document.getElementById('createSubmit');
+        const errorModal = document.querySelector('.error-modal');
+        const errorMessage = document.querySelector('.error-modal .message');
+
+        function setStatus(text) {
+            loadStatusEl.textContent = text;
+        }
+
+        function setUiEnabled(enabled) {
+            reloadButton.disabled = !enabled;
+            exportButton.disabled = !enabled || segments.length === 0;
+            formSubmitButton.disabled = !enabled;
+        }
+
+        function formatNumber(value, decimals = 2) {
+            if (!isFinite(value)) {
+                return '0';
+            }
+            const formatter = new Intl.NumberFormat(undefined, {
+                maximumFractionDigits: decimals
+            });
+            return formatter.format(value);
+        }
+
+        function formatDate(value) {
+            if (!value) {
+                return '-';
+            }
+            const date = value instanceof Date ? value : new Date(value);
+            return isNaN(date.valueOf()) ? '-' : date.toLocaleDateString();
+        }
+
+        function colorArrayToHex(arr) {
+            if (!Array.isArray(arr)) {
+                return '';
+            }
+            const clamp = component => {
+                const value = Math.round(Math.max(0, Math.min(1, Number(component))) * 255);
+                return value.toString(16).padStart(2, '0');
+            };
+            const [r = 0, g = 0, b = 0] = arr;
+            return `#${clamp(r)}${clamp(g)}${clamp(b)}`;
+        }
+
+        function renderStageBreakdown(stageTotals) {
+            stageBreakdownEl.innerHTML = '';
+            Object.entries(STAGE_LIBRARY).forEach(([key, config]) => {
+                const stats = stageTotals[key] ?? { count: 0, length: 0 };
+                const item = document.createElement('div');
+                item.className = 'stage-item';
+                item.innerHTML = `
+                    <div class="stage-info">
+                        <span class="swatch" style="background:${config.colorHex};"></span>
+                        <span>${config.label}</span>
+                    </div>
+                    <div class="stage-stats">
+                        <span>${stats.count} segment${stats.count === 1 ? '' : 's'}</span>
+                        <span>${formatNumber(stats.length, 3)} m</span>
+                    </div>
+                `;
+                stageBreakdownEl.appendChild(item);
+            });
+        }
+
+        function updateSummary() {
+            if (segments.length === 0) {
+                metricVolumeEl.textContent = '0';
+                metricLengthEl.textContent = '0';
+                metricCountEl.textContent = '0';
+                metricLastEl.textContent = '-';
+                renderStageBreakdown({});
+                refreshStageStartInput();
+                exportButton.disabled = true;
+                return;
+            }
+
+            let totalVolume = 0;
+            let totalLength = 0;
+            let lastDate = null;
+            const stageTotals = {};
+
+            segments.forEach(segment => {
+                totalVolume += segment.volume || 0;
+                totalLength += segment.length || 0;
+                if (segment.dateValue && (!lastDate || segment.dateValue > lastDate)) {
+                    lastDate = segment.dateValue;
+                }
+                const bucket = stageTotals[segment.stage] ?? { count: 0, length: 0 };
+                bucket.count += 1;
+                bucket.length += segment.length || 0;
+                stageTotals[segment.stage] = bucket;
+            });
+
+            metricVolumeEl.textContent = formatNumber(totalVolume);
+            metricLengthEl.textContent = formatNumber(totalLength, 3);
+            metricCountEl.textContent = segments.length.toString();
+            metricLastEl.textContent = lastDate ? formatDate(lastDate) : '-';
+            renderStageBreakdown(stageTotals);
+            refreshStageStartInput();
+            exportButton.disabled = isBusy;
+        }
+
+        function segmentComparator(a, b) {
+            if (a.start !== b.start) {
+                return a.start - b.start;
+            }
+            const orderA = STAGE_ORDER[a.stage] ?? 99;
+            const orderB = STAGE_ORDER[b.stage] ?? 99;
+            if (orderA !== orderB) {
+                return orderA - orderB;
+            }
+            return a.displayName.localeCompare(b.displayName);
+        }
+
+        function renderTable() {
+            tableBody.innerHTML = '';
+            if (segments.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="6">No segments loaded yet.</td>';
+                tableBody.appendChild(row);
+                tableCountEl.textContent = '0 items';
+                return;
+            }
+
+            const ordered = segments.slice().sort(segmentComparator);
+            ordered.forEach(segment => {
+                const sourceTag = segment.source === 'custom' ? '<span class="tag">Custom</span>' : '';
+                const chainText = `${formatNumber(segment.start, 3)} - ${formatNumber(segment.end, 3)}`;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span class="chip" style="background:${segment.colorHex};">${segment.stageLabel}</span>${sourceTag}</td>
+                    <td>${chainText}</td>
+                    <td>${formatNumber(segment.length, 3)}</td>
+                    <td>${formatNumber(segment.volume)}</td>
+                    <td>${segment.executedDate ? formatDate(segment.dateValue ?? segment.executedDate) : '-'}</td>
+                    <td class="actions-cell">
+                        <button class="action-button" type="button" data-remove="${segment.id}" title="Remove segment">
+                            <span class="material-symbols-outlined" style="font-size:1rem;">delete</span>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            tableCountEl.textContent = `${ordered.length} item${ordered.length === 1 ? '' : 's'}`;
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorModal.style.display = 'flex';
+        }
+
+        function hideError() {
+            errorModal.style.display = 'none';
+        }
+
+        function cloneJson(value) {
+            if (typeof structuredClone === 'function') {
+                return structuredClone(value);
+            }
+            return JSON.parse(JSON.stringify(value));
+        }
+
+        function mergeDataEntry(map, entry) {
+            if (!entry || typeof entry.path !== 'string') {
+                return;
+            }
+            const targetPath = entry.path;
+            const existing = map.get(targetPath);
+            if (!existing) {
+                map.set(targetPath, cloneJson(entry));
+                return;
+            }
+
+            if (entry.children) {
+                const targetChildren = existing.children ? { ...existing.children } : {};
+                Object.entries(entry.children).forEach(([name, childPath]) => {
+                    targetChildren[name] = childPath;
+                });
+                if (Object.keys(targetChildren).length > 0) {
+                    existing.children = targetChildren;
+                }
+            }
+
+            if (entry.attributes) {
+                const targetAttributes = existing.attributes ? { ...existing.attributes } : {};
+                Object.entries(entry.attributes).forEach(([name, value]) => {
+                    targetAttributes[name] = cloneJson(value);
+                });
+                if (Object.keys(targetAttributes).length > 0) {
+                    existing.attributes = targetAttributes;
+                }
+            }
+
+            if (entry.inherits) {
+                const targetInherits = existing.inherits ? { ...existing.inherits } : {};
+                Object.entries(entry.inherits).forEach(([name, value]) => {
+                    targetInherits[name] = value;
+                });
+                if (Object.keys(targetInherits).length > 0) {
+                    existing.inherits = targetInherits;
+                }
+            }
+        }
+
+        function cleanupDataEntry(entry) {
+            if (entry.children && Object.keys(entry.children).length === 0) {
+                delete entry.children;
+            }
+            if (entry.attributes && Object.keys(entry.attributes).length === 0) {
+                delete entry.attributes;
+            }
+            if (entry.inherits && Object.keys(entry.inherits).length === 0) {
+                delete entry.inherits;
+            }
+            return entry;
+        }
+
+        async function ensureTemplateBaseData(template) {
+            if (!template) {
+                return [];
+            }
+            if (template.baseDataEntries) {
+                return template.baseDataEntries;
+            }
+            if (!template.baseExampleFile) {
+                template.baseDataEntries = [];
+                return template.baseDataEntries;
+            }
+            const response = await fetch(`./progress/tunnel/${template.baseExampleFile}`, { cache: 'no-store' });
+            if (!response.ok) {
+                throw new Error(`Failed to load ${template.baseExampleFile}: ${response.status} ${response.statusText}`);
+            }
+            const json = await response.json();
+            const entries = Array.isArray(json?.data) ? json.data : [];
+            const cloned = entries.map(entry => cloneJson(entry));
+            cloned.forEach(entry => {
+                if (entry.path === template.stageRootPath && entry.children) {
+                    Object.entries({ ...entry.children }).forEach(([childName, childPath]) => {
+                        if (childPath === template.baseEntityPath) {
+                            delete entry.children[childName];
+                        }
+                    });
+                    if (entry.children && Object.keys(entry.children).length === 0) {
+                        delete entry.children;
+                    }
+                }
+            });
+            template.baseDataEntries = cloned;
+            return template.baseDataEntries;
+        }
+
+        async function buildExportFile() {
+            if (segments.length === 0) {
+                throw new Error('No tunnel segments available to export.');
+            }
+
+            const dataMap = new Map();
+            const stagesInUse = new Set(segments.map(segment => segment.stage).filter(Boolean));
+
+            for (const stage of stagesInUse) {
+                const template = STAGE_LIBRARY[stage];
+                const baseEntries = await ensureTemplateBaseData(template);
+                baseEntries.forEach(entry => mergeDataEntry(dataMap, entry));
+            }
+
+            segments.forEach(segment => {
+                const entries = Array.isArray(segment.rawJson?.data) ? segment.rawJson.data : [];
+                entries.forEach(entry => mergeDataEntry(dataMap, entry));
+            });
+
+            const data = Array.from(dataMap.values()).map(cleanupDataEntry);
+
+            const sourceHeader = segments[0]?.rawJson?.header ?? {};
+            const now = new Date();
+            const iso = now.toISOString();
+            const safeStamp = iso.replace(/[-:T]/g, '').slice(0, 15);
+
+            const header = {
+                id: `Tunnel_Export_${safeStamp}.ifcx`,
+                ifcxVersion: sourceHeader.ifcxVersion || 'ifcx_alpha',
+                dataVersion: sourceHeader.dataVersion || '1.0.0',
+                author: `${sourceHeader.author || 'Tunnel Progress Workflow'} Export`,
+                timestamp: iso.slice(0, 10)
+            };
+
+            return {
+                header,
+                imports: DEFAULT_IMPORTS.map(importObj => ({ ...importObj })),
+                schemas: {},
+                data
+            };
+        }
+
+        async function exportTunnelModel() {
+            if (isBusy) {
+                return;
+            }
+            if (segments.length === 0) {
+                showError('Add at least one segment before exporting.');
+                return;
+            }
+
+            isBusy = true;
+            setUiEnabled(false);
+            setStatus('Preparing export...');
+
+            try {
+                const exportFile = await buildExportFile();
+                const blob = new Blob([JSON.stringify(exportFile, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = exportFile.header.id;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
+                setStatus('Export ready');
+            } catch (error) {
+                console.error('Failed to export tunnel IFCX', error);
+                showError(error && error.message ? error.message : String(error));
+                setStatus('Export failed');
+            } finally {
+                setUiEnabled(true);
+                isBusy = false;
+                setStatus('Ready');
+            }
+        }
+
+        function generateId(prefix) {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                return window.crypto.randomUUID();
+            }
+            return `${prefix}-${Math.random().toString(16).slice(2)}-${Date.now().toString(16)}`;
+        }
+
+        function hexToRgbArray(hex) {
+            if (!hex) {
+                return [0, 0, 0];
+            }
+            const normalized = hex.replace('#', '').trim();
+            const value = normalized.length === 3
+                ? normalized.split('').map(ch => ch + ch).join('')
+                : normalized.padEnd(6, '0').slice(0, 6);
+            const r = parseInt(value.slice(0, 2), 16) / 255;
+            const g = parseInt(value.slice(2, 4), 16) / 255;
+            const b = parseInt(value.slice(4, 6), 16) / 255;
+            return [r, g, b];
+        }
+
+        function buildStageTemplate(config) {
+            const baseLength = Math.max(1e-6, Number(config.baseLength) || 1);
+            const childPrefix = typeof config.childPrefix === 'string' && config.childPrefix.trim()
+                ? config.childPrefix.trim()
+                : 'Segment';
+
+            return {
+                key: config.key,
+                label: config.label,
+                colorHex: config.colorHex,
+                colorArray: hexToRgbArray(config.colorHex),
+                lateralOffset: Number(config.lateralOffset ?? 0),
+                startOffset: Number(config.startOffset ?? 0),
+                anchorMin: Number.isFinite(config.anchorMin) ? Number(config.anchorMin) : 0,
+                volumePerMeter: Number(config.volumePerMeter ?? 0),
+                baseLength,
+                stageRootPath: config.stageRootPath ?? null,
+                baseEntityPath: config.baseEntityPath ?? null,
+                childPrefix,
+                baseExampleFile: config.baseExampleFile ?? null,
+                baseDataEntries: null
+            };
+        }
+
+        function stripTrailingZeros(value) {
+            return Number(value).toFixed(3).replace(/\.?0+$/, '');
+        }
+
+        function getStageLastEnd(stageKey) {
+            if (!stageKey) {
+                return 0;
+            }
+            let maxEnd = 0;
+            for (const segment of segments) {
+                if (segment.stage === stageKey) {
+                    const endValue = Number(segment.end ?? 0);
+                    if (endValue > maxEnd) {
+                        maxEnd = endValue;
+                    }
+                }
+            }
+            return maxEnd;
+        }
+
+        function refreshStageStartInput(stageKey = formStageSelect.value) {
+            if (!formStartInput) {
+                return;
+            }
+            const effectiveStage = stageKey || formStageSelect.value;
+            const lastEnd = getStageLastEnd(effectiveStage);
+            formStartInput.value = stripTrailingZeros(lastEnd);
+        }
+
+        function buildCustomSegmentJson(template, options) {
+            const { start, end, executedDate, sectionName } = options;
+            const startDistance = Number(start);
+            const endDistance = Number(end);
+            const length = endDistance - startDistance;
+            const scaleFactor = template.baseLength > 0 ? length / template.baseLength : 1;
+
+            const formattedStart = stripTrailingZeros(startDistance);
+            const formattedEnd = stripTrailingZeros(endDistance);
+            const displayName = `${template.label} ${formattedStart}-${formattedEnd} m`;
+            const headerId = `${template.label.replace(/\s+/g, '_')}_${formattedStart}_${formattedEnd}.ifcx`;
+            const timestamp = executedDate || new Date().toISOString().slice(0, 10);
+
+            const stageRootPath = template.stageRootPath ?? generateId('root');
+            const segmentPath = generateId('segment');
+            const encodeChain = value => stripTrailingZeros(value).replace(/[^0-9A-Za-z]/g, '_');
+            const childKeyBase = `${template.childPrefix}_${encodeChain(startDistance)}_${encodeChain(endDistance)}`;
+            const uniqueSuffix = segmentPath.replace(/[^0-9A-Za-z]/g, '').slice(-6);
+            const childKey = `${childKeyBase}_${uniqueSuffix}`.replace(/_+/g, '_');
+
+            const anchorMin = Number.isFinite(template.anchorMin) ? template.anchorMin : 0;
+            const translationX = startDistance + template.startOffset - anchorMin * scaleFactor + anchorMin;
+            const transform = [
+                [scaleFactor, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [translationX, template.lateralOffset, 0, 1]
+            ];
+
+            const volume = template.volumePerMeter * length;
+            const attributes = {
+                "bsi::ifc::prop::Volume": volume,
+                "bsi::ifc-infra::prop::StartDistanceAlong": startDistance,
+                "bsi::ifc-infra::prop::EndMeter": endDistance,
+                "bsi::ifc-infra::prop::ExcavationDate": executedDate || '',
+                "bsi::ifc::presentation::diffuseColor": template.colorArray,
+                "bsi::ifc::class": {
+                    code: "IfcEarthworksCut",
+                    uri: "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcEarthworksCut"
+                },
+                "usd::xformop": {
+                    transform
+                }
+            };
+
+            const dataEntries = [
+                {
+                    path: stageRootPath,
+                    children: {
+                        [childKey]: segmentPath
+                    }
+                },
+                {
+                    path: segmentPath,
+                    attributes
+                }
+            ];
+
+            if (template.baseEntityPath) {
+                dataEntries.push({
+                    path: segmentPath,
+                    inherits: {
+                        IfcEarthworksCut: template.baseEntityPath
+                    }
+                });
+            }
+
+            const file = {
+                header: {
+                    id: headerId,
+                    ifcxVersion: "ifcx_alpha",
+                    dataVersion: "1.0.0",
+                    author: "Tunnel Progress Workflow",
+                    timestamp
+                },
+                imports: DEFAULT_IMPORTS.map(importObj => ({ ...importObj })),
+                schemas: {},
+                data: dataEntries
+            };
+
+            return {
+                file,
+                displayName,
+                headerId,
+                volume
+            };
+        }
+
+        function extractSegmentInfo(json, entry) {
+            const stage = entry.stage;
+            const template = STAGE_LIBRARY[stage];
+            const dataEntries = Array.isArray(json?.data) ? json.data : [];
+            const attrEntry = dataEntries.find(item =>
+                item?.attributes && Object.prototype.hasOwnProperty.call(item.attributes, 'bsi::ifc-infra::prop::StartDistanceAlong')
+            );
+            const attrs = attrEntry?.attributes ?? {};
+
+            const start = Number(attrs['bsi::ifc-infra::prop::StartDistanceAlong'] ?? 0);
+            const end = Number(attrs['bsi::ifc-infra::prop::EndMeter'] ?? start);
+            const volume = Number(attrs['bsi::ifc::prop::Volume'] ?? 0);
+            const executedDate = attrs['bsi::ifc-infra::prop::ExcavationDate'] ?? '';
+            const dateValue = executedDate ? new Date(executedDate) : null;
+            const colorHex = Array.isArray(attrs['bsi::ifc::presentation::diffuseColor'])
+                ? colorArrayToHex(attrs['bsi::ifc::presentation::diffuseColor'])
+                : (template?.colorHex ?? '#4f6aa0');
+
+            const headerId = json?.header?.id ?? entry.file;
+            const displayName = headerId.replace(/\.ifcx$/i, '');
+
+            return {
+                id: generateId('seg'),
+                stage,
+                stageLabel: template?.label ?? stage,
+                displayName,
+                headerId,
+                start,
+                end,
+                length: Math.max(0, end - start),
+                volume,
+                executedDate,
+                dateValue: dateValue && !isNaN(dateValue.valueOf()) ? dateValue : null,
+                colorHex,
+                rawJson: json,
+                source: 'example',
+                section: 'North Tunnel'
+            };
+        }
+
+        async function syncViewerLayers(statusMessage) {
+            if (statusMessage) {
+                setStatus(statusMessage);
+            }
+            await clearModels();
+            for (const segment of segments) {
+                await addModel(segment.displayName, cloneJson(segment.rawJson));
+            }
+        }
+
+        async function loadSegments() {
+            if (isBusy) {
+                return;
+            }
+            isBusy = true;
+            setUiEnabled(false);
+            setStatus('Loading example segments...');
+            hideError();
+
+            const collected = [];
+
+            try {
+                for (const entry of SEGMENT_FILES) {
+                    const response = await fetch(`./progress/tunnel/${entry.file}`, { cache: 'no-store' });
+                    if (!response.ok) {
+                        throw new Error(`Failed to load ${entry.file}: ${response.status} ${response.statusText}`);
+                    }
+                    const json = await response.json();
+                    collected.push(extractSegmentInfo(json, entry));
+                }
+
+                segments.splice(0, segments.length, ...collected);
+                segments.sort(segmentComparator);
+                await syncViewerLayers('Loading example segments...');
+                setStatus('Examples loaded');
+            } catch (error) {
+                console.error('Failed to load tunnel segments', error);
+                showError(error && error.message ? error.message : String(error));
+                segments.splice(0, segments.length);
+                try {
+                    await clearModels();
+                } catch (innerError) {
+                    console.warn('Failed to clear viewer after load error', innerError);
+                }
+                setStatus('Load failed');
+            } finally {
+                updateSummary();
+                renderTable();
+                setUiEnabled(true);
+                isBusy = false;
+            }
+        }
+
+        async function removeSegmentById(id) {
+            if (isBusy) {
+                return;
+            }
+            const index = segments.findIndex(segment => segment.id === id);
+            if (index === -1) {
+                return;
+            }
+
+            const [removed] = segments.splice(index, 1);
+            updateSummary();
+            renderTable();
+
+            isBusy = true;
+            setUiEnabled(false);
+            try {
+                segments.sort(segmentComparator);
+                if (segments.length === 0) {
+                    await clearModels();
+                    setStatus('Viewer cleared');
+                } else {
+                    await syncViewerLayers('Updating viewer...');
+                    setStatus('Ready');
+                }
+            } catch (error) {
+                console.error('Failed to update viewer after removal', error);
+                showError(error && error.message ? error.message : String(error));
+                segments.splice(index, 0, removed);
+                segments.sort(segmentComparator);
+                updateSummary();
+                renderTable();
+                try {
+                    await syncViewerLayers('Restoring viewer...');
+                } catch (innerError) {
+                    console.error('Failed to restore viewer after error', innerError);
+                }
+            } finally {
+                setUiEnabled(true);
+                isBusy = false;
+                setStatus('Ready');
+            }
+        }
+
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+            if (isBusy) {
+                return;
+            }
+
+            const stageKey = formStageSelect.value;
+            const template = STAGE_LIBRARY[stageKey];
+            if (!template) {
+                showError('Select a tunnel part before adding a segment.');
+                return;
+            }
+
+            const start = Number(formStartInput.value);
+            const end = Number(formEndInput.value);
+            if (!isFinite(start) || !isFinite(end)) {
+                showError('Start and end chainages must be numbers.');
+                return;
+            }
+            if (end <= start) {
+                showError('End chainage must be greater than start chainage.');
+                return;
+            }
+
+            const sectionName = formSectionInput.value.trim() || 'North Tunnel';
+            const executedDate = formDateInput.value ? new Date(formDateInput.value).toISOString().slice(0, 10) : '';
+
+            const { file, displayName, headerId, volume } = buildCustomSegmentJson(template, {
+                start,
+                end,
+                executedDate,
+                sectionName
+            });
+
+            const segment = {
+                id: generateId('seg'),
+                stage: stageKey,
+                stageLabel: template.label,
+                displayName,
+                headerId,
+                start,
+                end,
+                length: end - start,
+                volume,
+                executedDate,
+                dateValue: executedDate ? new Date(executedDate) : null,
+                colorHex: template.colorHex,
+                rawJson: file,
+                source: 'custom',
+                section: sectionName
+            };
+
+            segments.push(segment);
+            segments.sort(segmentComparator);
+            updateSummary();
+            renderTable();
+
+            isBusy = true;
+            setUiEnabled(false);
+            try {
+                await syncViewerLayers('Updating viewer...');
+                setStatus('Ready');
+                form.reset();
+                formStageSelect.value = stageKey;
+                formSectionInput.value = sectionName;
+                refreshStageStartInput(stageKey);
+                formEndInput.value = '';
+            } catch (error) {
+                console.error('Failed to update viewer after adding segment', error);
+                showError(error && error.message ? error.message : String(error));
+                const idx = segments.findIndex(seg => seg.id === segment.id);
+                if (idx !== -1) {
+                    segments.splice(idx, 1);
+                }
+                segments.sort(segmentComparator);
+                updateSummary();
+                renderTable();
+                try {
+                    await syncViewerLayers('Restoring viewer...');
+                } catch (innerError) {
+                    console.error('Failed to restore viewer after add error', innerError);
+                }
+            } finally {
+                setUiEnabled(true);
+                isBusy = false;
+                setStatus('Ready');
+            }
+        });
+
+        formStageSelect.addEventListener('change', () => {
+            refreshStageStartInput(formStageSelect.value);
+            formEndInput.value = '';
+        });
+
+        exportButton.addEventListener('click', () => {
+            void exportTunnelModel();
+        });
+
+        reloadButton.addEventListener('click', () => {
+            if (!isBusy) {
+                void loadSegments();
+            }
+        });
+
+        tableBody.addEventListener('click', event => {
+            const button = event.target.closest('button[data-remove]');
+            if (!button) {
+                return;
+            }
+            void removeSegmentById(button.dataset.remove);
+        });
+
+        errorModal.addEventListener('click', hideError);
+
+        renderStageBreakdown({});
+        updateSummary();
+        renderTable();
+        setStatus('Initializing...');
+        setUiEnabled(true);
+        void loadSegments();
+    </script>
+</body>
+</html>
