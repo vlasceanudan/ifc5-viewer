@@ -271,8 +271,13 @@ function AddDataFromPreComposition(input, node, nodes) {
   });
   Object.entries(input.children).forEach(([childName, child]) => {
     if (child !== null) {
-      let classNode = ComposeNodeFromPath(GetHead(child), nodes);
-      let subnode = GetChildNodeWithPath(classNode, GetTail(child));
+      let subnode;
+      if (GetHead(child) === input.path) {
+        subnode = ComposeNodeFromPath(child, nodes);
+      } else {
+        let classNode = ComposeNodeFromPath(GetHead(child), nodes);
+        subnode = GetChildNodeWithPath(classNode, GetTail(child));
+      }
       if (!subnode) throw new Error(`Unknown node ${child}`);
       node.children.set(childName, subnode);
     } else {
@@ -333,19 +338,32 @@ function ValidateAttributeValue(desc, value, path, schemas) {
       throw new SchemaValidationError(`Expected "${value}" to be of type string`);
     }
   } else if (desc.dataType === "Object") {
-    if (typeof value !== "object") {
+    if (typeof value !== "object" || value === null) {
       throw new SchemaValidationError(`Expected "${value}" to be of type object`);
     }
     if (desc.objectRestrictions) {
-      Object.keys(desc.objectRestrictions.values).forEach((key) => {
-        let optional = desc.objectRestrictions.values[key].optional;
+      const valueRestrictions = desc.objectRestrictions.values && typeof desc.objectRestrictions.values === "object" ? desc.objectRestrictions.values : {};
+      Object.keys(valueRestrictions).forEach((key) => {
+        let optional = valueRestrictions[key].optional;
         let hasOwn = Object.hasOwn(value, key);
         if (optional && !hasOwn) return;
         if (!hasOwn) {
           throw new SchemaValidationError(`Expected "${value}" to have key ${key}`);
         }
-        ValidateAttributeValue(desc.objectRestrictions.values[key], value[key], path + "." + key, schemas);
+        ValidateAttributeValue(valueRestrictions[key], value[key], path + "." + key, schemas);
       });
+      const additional = desc.objectRestrictions.additionalProperties;
+      if (additional) {
+        Object.keys(value).forEach((key) => {
+          if (Object.hasOwn(valueRestrictions, key)) return;
+          ValidateAttributeValue(additional, value[key], path + "." + key, schemas);
+        });
+      } else {
+        Object.keys(value).forEach((key) => {
+          if (Object.hasOwn(valueRestrictions, key)) return;
+          throw new SchemaValidationError(`Unexpected key "${key}" in object at ${path}`);
+        });
+      }
     }
   } else if (desc.dataType === "Array") {
     if (!Array.isArray(value)) {
@@ -691,9 +709,45 @@ async function init() {
   renderer.domElement.addEventListener("click", onCanvasClick);
   return scene;
 }
+function getAttribute(node, attrName) {
+  if (!node || !node.attributes) return void 0;
+  if (Object.prototype.hasOwnProperty.call(node.attributes, attrName)) {
+    return node.attributes[attrName];
+  }
+  const splitIndex = attrName.lastIndexOf("::");
+  if (splitIndex === -1) {
+    return node.attributes[attrName];
+  }
+  const parentKey = attrName.slice(0, splitIndex);
+  const childKey = attrName.slice(splitIndex + 2);
+  const parentValue = node.attributes[parentKey];
+  if (parentValue && typeof parentValue === "object" && !Array.isArray(parentValue)) {
+    return parentValue[childKey];
+  }
+  return void 0;
+}
 function HasAttr(node, attrName) {
-  if (!node || !node.attributes) return false;
-  return !!node.attributes[attrName];
+  return getAttribute(node, attrName) !== void 0;
+}
+function flattenNumberArray(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const anyValue = value;
+  if (typeof anyValue.flat === "function") {
+    return anyValue.flat(Infinity).map((n) => Number(n));
+  }
+  const result = [];
+  const stack = [...value];
+  while (stack.length) {
+    const item = stack.shift();
+    if (Array.isArray(item)) {
+      stack.unshift(...item);
+    } else if (item !== void 0 && item !== null) {
+      result.push(Number(item));
+    }
+  }
+  return result;
 }
 function setHighlight(obj, highlight) {
   if (!obj) return;
@@ -841,7 +895,12 @@ function createMaterialFromParent(path) {
   return material;
 }
 function createCurveFromJson(path) {
-  let points = new Float32Array(path[0].attributes["usd::usdgeom::basiscurves::points"].flat());
+  const pointAttr = getAttribute(path[0], "usd::usdgeom::basiscurves::points");
+  const flatPoints = flattenNumberArray(pointAttr);
+  if (flatPoints.length === 0) {
+    return new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial());
+  }
+  const points = new Float32Array(flatPoints);
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.BufferAttribute(points, 3));
   const material = createMaterialFromParent(path);
@@ -850,8 +909,15 @@ function createCurveFromJson(path) {
   return new THREE.Line(geometry, lineMaterial);
 }
 function createMeshFromJson(path) {
-  let points = new Float32Array(path[0].attributes["usd::usdgeom::mesh::points"].flat());
-  let indices = new Uint16Array(path[0].attributes["usd::usdgeom::mesh::faceVertexIndices"]);
+  const pointsAttr = getAttribute(path[0], "usd::usdgeom::mesh::points");
+  const indicesAttr = getAttribute(path[0], "usd::usdgeom::mesh::faceVertexIndices");
+  const flatPoints = flattenNumberArray(pointsAttr);
+  const flatIndices = flattenNumberArray(indicesAttr);
+  if (flatPoints.length === 0 || flatIndices.length === 0) {
+    return new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ visible: false }));
+  }
+  let points = new Float32Array(flatPoints);
+  let indices = flatIndices.length > 0 && flatIndices.some((v) => v > 65535) ? new Uint32Array(flatIndices) : new Uint16Array(flatIndices);
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.BufferAttribute(points, 3));
   geometry.setIndex(new THREE.BufferAttribute(indices, 1));
@@ -938,7 +1004,8 @@ function traverseTree(path, parent, pathMapping) {
   const node = path[0];
   let elem = new THREE.Group();
   if (HasAttr(node, "usd::usdgeom::visibility::visibility")) {
-    if (node.attributes["usd::usdgeom::visibility::visibility"] === "invisible") {
+    const visibility = getAttribute(node, "usd::usdgeom::visibility::visibility");
+    if (visibility === "invisible") {
       return;
     }
   } else if (HasAttr(node, "usd::usdgeom::mesh::points")) {
@@ -961,8 +1028,9 @@ function traverseTree(path, parent, pathMapping) {
   parent.add(elem);
   if (path.length > 1) {
     elem.matrixAutoUpdate = false;
-    let matrixNode = node.attributes && node.attributes["usd::xformop::transform"] ? node.attributes["usd::xformop::transform"].flat() : null;
-    if (matrixNode) {
+    const matrixAttr = getAttribute(node, "usd::xformop::transform");
+    const matrixNode = Array.isArray(matrixAttr) ? flattenNumberArray(matrixAttr) : [];
+    if (matrixNode.length === 16) {
       let matrix = new THREE.Matrix4();
       matrix.set(...matrixNode);
       matrix.transpose();
@@ -1011,7 +1079,8 @@ function handleClick(prim, pathMapping, root) {
     container.innerHTML = "";
     const table = document.createElement("table");
     table.setAttribute("border", "0");
-    const entries = [["name", prim.name], ...Object.entries(prim.attributes).filter(([k, _]) => !k.startsWith("__internal_"))];
+    const attributes = prim.attributes || {};
+    const entries = [["name", prim.name], ...Object.entries(attributes).filter(([k, _]) => !k.startsWith("__internal_"))];
     const format = (value) => {
       if (Array.isArray(value)) {
         let N = document.createElement("span");
@@ -1153,7 +1222,12 @@ async function composeAndRender() {
   }
   let tree = null;
   let dataArray = datas.map((arr) => arr[1]);
-  tree = await compose3(dataArray);
+  try {
+    tree = await compose3(dataArray);
+  } catch (e) {
+    console.error("compose3 failed", e);
+    throw e;
+  }
   if (!tree) {
     console.error("No result from composition");
     return;
